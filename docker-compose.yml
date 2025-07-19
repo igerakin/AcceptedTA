@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  technical-assessment:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: technical-assessment-app
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:technicalassessment
+      - SPRING_H2_CONSOLE_ENABLED=true
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - technical-assessment-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    
+  # Optional: Add a production database (PostgreSQL)
+  # Uncomment if you want to use a real database instead of H2
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: technical-assessment-db
+  #   environment:
+  #     - POSTGRES_DB=technicalassessment
+  #     - POSTGRES_USER=admin
+  #     - POSTGRES_PASSWORD=admin123
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - technical-assessment-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U admin -d technicalassessment"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+networks:
+  technical-assessment-network:
+    driver: bridge
+
+volumes:
+  logs:
+  # postgres_data:  # Uncomment if using PostgreSQL
